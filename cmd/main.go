@@ -5,6 +5,9 @@ import (
 	"io"
 
 	"github.com/urfave/cli"
+	"github.com/containers/image/v5/transports/alltransports"
+	"github.com/syndtr/gocapability/capability"
+	"github.com/containers/common/pkg/unshare"
 )
 
 type Output struct {
@@ -21,6 +24,31 @@ type inspectOptions struct {
 
 type Options struct {
 }
+
+func reexecIfNecessaryForImages(imageNames ...string) error {
+	for _, imageName := range imageNames {
+		transport := alltransports.TransportFromImageName(imageName)
+		if transport != nil && transport.Name() == "containers-storage" {
+			return maybeReexec()
+		}
+	}
+	return nil
+}
+
+func maybeReexec() error {
+	capabilities, err := capability.NewPid(0)
+	if err != nil {
+		return errors.Wrapf(err, "error reading the current capabilities sets")
+	}
+	for _, cap := range neededCapabilities {
+		if !capabilities.Get(capability.EFFECTIVE, cap) {
+			unshare.MaybeReexecUsingUserNamespace(true)
+			return nil
+		}
+	}
+	return nil
+}
+
 
 func command(global *globalOptions) cli.Command {
 	sharedFlags, sharedOpts := sharedImageFlags()
