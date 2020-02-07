@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/containers/common/pkg/unshare"
@@ -84,16 +84,12 @@ func (opts *inspectOptions) run(args []string, stdout io.Writer) (retErr error) 
 	if err != nil {
 		return err
 	}
-	if err != nil {
-		return fmt.Errorf("Error parsing image name %q: %v", imageName, err)
-	}
 
 	defer func() {
 		if err := src.Close(); err != nil {
-			retErr = errors.Wrapf(retErr, fmt.Sprintf("(could not close image: %v) ", err))
+			retErr = errors.New(fmt.Sprintf("(could not close image: %v) ", err))
 		}
 	}()
-
 
 	return nil
 }
