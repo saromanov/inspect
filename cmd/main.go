@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"errors"
 	"io"
 
-	"github.com/urfave/cli"
+	"github.com/containers/common/pkg/unshare"
 	"github.com/containers/image/v5/transports/alltransports"
 	"github.com/syndtr/gocapability/capability"
-	"github.com/containers/common/pkg/unshare"
+	"github.com/urfave/cli"
 )
 
 type Output struct {
@@ -49,7 +50,6 @@ func maybeReexec() error {
 	return nil
 }
 
-
 func command(global *globalOptions) cli.Command {
 	sharedFlags, sharedOpts := sharedImageFlags()
 	imageFlags, imageOpts := imageFlags(global, sharedOpts, "", "")
@@ -84,6 +84,16 @@ func (opts *inspectOptions) run(args []string, stdout io.Writer) (retErr error) 
 	if err != nil {
 		return err
 	}
+	if err != nil {
+		return fmt.Errorf("Error parsing image name %q: %v", imageName, err)
+	}
+
+	defer func() {
+		if err := src.Close(); err != nil {
+			retErr = errors.Wrapf(retErr, fmt.Sprintf("(could not close image: %v) ", err))
+		}
+	}()
+
 
 	return nil
 }
