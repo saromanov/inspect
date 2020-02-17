@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/containers/common/pkg/unshare"
+	"github.com/containers/image/types"
 	"github.com/containers/image/v5/transports/alltransports"
 	"github.com/syndtr/gocapability/capability"
 	"github.com/urfave/cli"
@@ -16,11 +18,27 @@ type Output struct {
 	Tag  string `json:",omitempty"`
 }
 
+type dockerImageOptions struct {
+	global         *globalOptions
+	shared         *sharedImageOptions
+	authFilePath   optionalString
+	credsOption    optionalString
+	dockerCertPath string
+	tlsVerify      optionalBool
+	noCreds        bool
+}
+
 type inspectOptions struct {
 	global *globalOptions
 	image  *imageOptions
 	raw    bool
 	config bool
+}
+
+type imageOptions struct {
+	dockerImageOptions
+	sharedBlobDir    string // A directory to use for OCI blobs, shared across repositories
+	dockerDaemonHost string // docker-daemon: host to connect to
 }
 
 type Options struct {
