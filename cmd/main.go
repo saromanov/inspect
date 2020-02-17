@@ -85,6 +85,11 @@ func (opts *inspectOptions) run(args []string, stdout io.Writer) (retErr error) 
 		return err
 	}
 
+	src, err := parseImageSource(ctx, opts.image, imageName)
+	if err != nil {
+		return fmt.Errorf("Error parsing image name %q: %v", imageName, err)
+	}
+
 	defer func() {
 		if err := src.Close(); err != nil {
 			retErr = errors.New(fmt.Sprintf("(could not close image: %v) ", err))
@@ -105,6 +110,18 @@ func (opts *inspectOptions) run(args []string, stdout io.Writer) (retErr error) 
 	}
 
 	return nil
+}
+
+func parseImageSource(ctx context.Context, opts *imageOptions, name string) (types.ImageSource, error) {
+	ref, err := alltransports.ParseImageName(name)
+	if err != nil {
+		return nil, err
+	}
+	sys, err := opts.newSystemContext()
+	if err != nil {
+		return nil, err
+	}
+	return ref.NewImageSource(ctx, sys)
 }
 
 func main() {
