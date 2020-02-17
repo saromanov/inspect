@@ -91,6 +91,19 @@ func (opts *inspectOptions) run(args []string, stdout io.Writer) (retErr error) 
 		}
 	}()
 
+	rawManifest, _, err := src.GetManifest(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("unable to get manifest: %v", err)
+	}
+
+	if opts.raw && !opts.config {
+		_, err := stdout.Write(rawManifest)
+		if err != nil {
+			return fmt.Errorf("unable to write manifest: %v", err)
+		}
+		return nil
+	}
+
 	return nil
 }
 
